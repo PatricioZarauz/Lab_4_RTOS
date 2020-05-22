@@ -53,6 +53,8 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 
+void blinkLED( void *p_param );
+
 /*
                          Main application
  */
@@ -73,6 +75,10 @@ int main(void)
     to be created.  See the memory management section on the FreeRTOS web site
     for more details. */
     for(;;);
+}
+
+void blinkLED( void *p_param ){
+    // Add your code here
 }
 
 void vApplicationMallocFailedHook( void ){
