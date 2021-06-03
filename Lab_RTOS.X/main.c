@@ -18,7 +18,7 @@
     The generated drivers are tested against the following:
         Compiler          :  XC16 v1.50
         MPLAB 	          :  MPLAB X v5.35
-*/
+ */
 
 /*
     (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
@@ -53,36 +53,53 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 
-void blinkLED( void *p_param );
+void blinkLED(void *p_param);
+void time(void *p_param);
 
 /*
                          Main application
  */
-int main(void)
-{
+int main(void) {
     // initialize the device
-    SYSTEM_Initialize( );
+    SYSTEM_Initialize();
 
     /* Create the tasks defined within this file. */
-    xTaskCreate( blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY+1, NULL );
-
+    xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(time, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    
+    //xSemaphoreTake();
     /* Finally start the scheduler. */
-    vTaskStartScheduler( );
+    vTaskStartScheduler();
 
     /* If all is well, the scheduler will now be running, and the following line
     will never be reached.  If the following line does execute, then there was
     insufficient FreeRTOS heap memory available for the idle and/or timer tasks
     to be created.  See the memory management section on the FreeRTOS web site
     for more details. */
-    for(;;);
-    //Es chau no hola
+    for (;;);
+
 }
 
-void blinkLED( void *p_param ){
-    // Add your code here
+void blinkLED(void *p_param) {
+    for (;;) {
+        LEDA_SetHigh();
+        vTaskDelay(pdMS_TO_TICKS(400));
+        LEDA_SetLow();
+        vTaskDelay(pdMS_TO_TICKS(800));
+    }
+    vTaskDelete(NULL);
 }
 
-void vApplicationMallocFailedHook( void ){
+void time(void *p_param) {
+    for (;;) {
+        //take
+        updateTime();
+        //give
+    }
+    vTaskDelete(NULL);
+}
+
+void vApplicationMallocFailedHook(void) {
     /* vApplicationMallocFailedHook() will only be called if
     configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
     function that will get called if a call to pvPortMalloc() fails.
@@ -93,13 +110,13 @@ void vApplicationMallocFailedHook( void ){
     FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
-    taskDISABLE_INTERRUPTS( );
-    for(;;);
+    taskDISABLE_INTERRUPTS();
+    for (;;);
 }
 
 /*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void ){
+void vApplicationIdleHook(void) {
     /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
     to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
     task.  It is essential that code added to this hook function never attempts
@@ -113,7 +130,7 @@ void vApplicationIdleHook( void ){
 
 /*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ){
+void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName) {
     (void) pcTaskName;
     (void) pxTask;
 
@@ -121,13 +138,13 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ){
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook	function is 
     called if a task stack overflow is detected.  Note the system/interrupt
     stack is not checked. */
-    taskDISABLE_INTERRUPTS( );
-    for(;;);
+    taskDISABLE_INTERRUPTS();
+    for (;;);
 }
 
 /*-----------------------------------------------------------*/
 
-void vApplicationTickHook( void ){
+void vApplicationTickHook(void) {
     /* This function will be called by each tick interrupt if
     configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
     added here, but the tick hook is called from an interrupt context, so
@@ -139,8 +156,8 @@ void vApplicationTickHook( void ){
 
 /*-----------------------------------------------------------*/
 
-void vAssertCalled( const char * pcFile, unsigned long ulLine ){
-    volatile unsigned long ul=0;
+void vAssertCalled(const char * pcFile, unsigned long ulLine) {
+    volatile unsigned long ul = 0;
 
     (void) pcFile;
     (void) ulLine;
@@ -149,8 +166,8 @@ void vAssertCalled( const char * pcFile, unsigned long ulLine ){
     {
         /* Set ul to a non-zero value using the debugger to step out of this
         function. */
-        while(ul==0){
-            portNOP( );
+        while (ul == 0) {
+            portNOP();
         }
     }
     __asm volatile( "ei");
@@ -158,5 +175,5 @@ void vAssertCalled( const char * pcFile, unsigned long ulLine ){
 
 /**
  End of File
-*/
+ */
 
