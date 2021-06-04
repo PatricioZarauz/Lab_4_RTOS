@@ -49,9 +49,11 @@
 /* Kernel includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "freeRTOS/include/semphr.h"
 
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
+#include "utils/USB.h"
 
 void blinkLED(void *p_param);
 void time(void *p_param);
@@ -65,8 +67,18 @@ int main(void) {
 
     /* Create the tasks defined within this file. */
     xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    xTaskCreate(time, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    SemaphoreHandle_t xMutex;
+
+    xMutex = xSemaphoreCreateMutex();
+    if (xMutex != NULL) {
+        xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        
+    }
     
+    //Create a task to initialize usb
+    
+
     //xSemaphoreTake();
     /* Finally start the scheduler. */
     vTaskStartScheduler();
@@ -90,12 +102,21 @@ void blinkLED(void *p_param) {
     vTaskDelete(NULL);
 }
 
-void time(void *p_param) {
+void usbService(void *p_param) {
     for (;;) {
-        //take
-        updateTime();
-        //give
+       USBStatusUpdater();
     }
+    
+    vTaskDelete(NULL);
+}
+
+void userInterface(void *p_param) {
+    for (;;) {
+        xSemaphoreTake(xMutex, portMAX_DELAY);
+        //userInterface
+        xSemaphoreGive(xMutex);
+    }
+    
     vTaskDelete(NULL);
 }
 
