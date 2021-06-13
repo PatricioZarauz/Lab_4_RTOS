@@ -18,7 +18,7 @@
     The generated drivers are tested against the following:
         Compiler          :  XC16 v1.50
         MPLAB 	          :  MPLAB X v5.35
-*/
+ */
 
 /*
     (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
@@ -52,9 +52,11 @@
 #include "freeRTOS/include/semphr.h"
 //#include "freeRTOS/include/queue.h"
 
-
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
+#include "utils/USB.h"
+#include "system/UI.h"
+
 
 void blinkLED(void *p_param);
 void time(void *p_param);
@@ -70,13 +72,10 @@ static SemaphoreHandle_t xMutex = 0;
 
 int main(void) {
     // initialize the device
-    SYSTEM_Initialize( );
+    SYSTEM_Initialize();
 
     /* Create the tasks defined within this file. */
-
     xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    
-
     xMutex = xSemaphoreCreateMutex();
     //cola = xQueueCreate(10, 1024);
     if (xMutex != NULL) {
@@ -85,8 +84,20 @@ int main(void) {
         //Crear userInterface dentro de usbService
         //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
 
+    //cola = xQueueCreate(10, 1024);
+    if (xMutex != NULL) {
+        xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        //Crear userInterface dentro de usbService
+        //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
+
+    }
+
+    //Create a task to initialize usb
+
+
+    //xSemaphoreTake();
     /* Finally start the scheduler. */
-    vTaskStartScheduler( );
+    vTaskStartScheduler();
 
     /* If all is well, the scheduler will now be running, and the following line
     will never be reached.  If the following line does execute, then there was
@@ -108,14 +119,24 @@ void blinkLED(void *p_param) {
 }
 
 void usbService(void *p_param) {
-    xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(userInterface, "usbService", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
     for (;;) {
             USBStatusUpdater();
         } 
     vTaskDelete(NULL);
 }
 
-void vApplicationMallocFailedHook( void ){
+void userInterface(void *p_param) {
+    for (;;) {
+        UI_showMenu(xMutex);
+        xSemaphoreTake(xMutex, portMAX_DELAY);
+        //userInterface
+        xSemaphoreGive(xMutex);
+    }
+    vTaskDelete(NULL);
+}
+
+void vApplicationMallocFailedHook(void) {
     /* vApplicationMallocFailedHook() will only be called if
     configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
     function that will get called if a call to pvPortMalloc() fails.
@@ -126,13 +147,13 @@ void vApplicationMallocFailedHook( void ){
     FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
-    taskDISABLE_INTERRUPTS( );
-    for(;;);
+    taskDISABLE_INTERRUPTS();
+    for (;;);
 }
 
 /*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void ){
+void vApplicationIdleHook(void) {
     /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
     to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
     task.  It is essential that code added to this hook function never attempts
@@ -146,7 +167,7 @@ void vApplicationIdleHook( void ){
 
 /*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ){
+void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName) {
     (void) pcTaskName;
     (void) pxTask;
 
@@ -154,13 +175,13 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ){
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook	function is 
     called if a task stack overflow is detected.  Note the system/interrupt
     stack is not checked. */
-    taskDISABLE_INTERRUPTS( );
-    for(;;);
+    taskDISABLE_INTERRUPTS();
+    for (;;);
 }
 
 /*-----------------------------------------------------------*/
 
-void vApplicationTickHook( void ){
+void vApplicationTickHook(void) {
     /* This function will be called by each tick interrupt if
     configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
     added here, but the tick hook is called from an interrupt context, so
@@ -172,8 +193,8 @@ void vApplicationTickHook( void ){
 
 /*-----------------------------------------------------------*/
 
-void vAssertCalled( const char * pcFile, unsigned long ulLine ){
-    volatile unsigned long ul=0;
+void vAssertCalled(const char * pcFile, unsigned long ulLine) {
+    volatile unsigned long ul = 0;
 
     (void) pcFile;
     (void) ulLine;
@@ -182,8 +203,8 @@ void vAssertCalled( const char * pcFile, unsigned long ulLine ){
     {
         /* Set ul to a non-zero value using the debugger to step out of this
         function. */
-        while(ul==0){
-            portNOP( );
+        while (ul == 0) {
+            portNOP();
         }
     }
     __asm volatile( "ei");
@@ -191,5 +212,5 @@ void vAssertCalled( const char * pcFile, unsigned long ulLine ){
 
 /**
  End of File
-*/
+ */
 

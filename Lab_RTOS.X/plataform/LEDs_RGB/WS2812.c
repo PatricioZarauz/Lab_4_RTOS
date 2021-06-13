@@ -103,7 +103,7 @@ static void WS2812_sendSingle(ws2812_t* p_led) {
             // if it is a 1, let it stay higher a bit longer
             //LED_CTRL_SetHigh(); // 0.90 us
             
-            // SE COMENTAN LAS FUNCIONES SETHIGH Y SETLOW PORQUE SINO NO COMPILA, NO SE PORQUE
+            // SE COMENTAN LAS FUNCIONES SETHIGH Y SETLOW PORQUE SINO NO COMPILA, NO SE PORQUE // 0.90 us
             _nop();
             _nop();
             _nop();
@@ -123,6 +123,7 @@ static void WS2812_sendSingle(ws2812_t* p_led) {
             _nop();
             _nop();
             //LED_CTRL_SetLow(); // 0.35 us
+            // 0.35 us
             _nop();
             _nop();
             _nop();
@@ -131,12 +132,14 @@ static void WS2812_sendSingle(ws2812_t* p_led) {
         } else {
             // but a 0 should go high and then low as fast as possible
             //LED_CTRL_SetHigh(); // 0.35 us
+            // 0.35 us
             _nop();
             _nop();
             _nop();
             _nop();
             _nop();
             //LED_CTRL_SetLow(); // 0.90 us
+            // 0.90 us
             _nop();
             _nop();
             _nop();

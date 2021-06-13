@@ -63,7 +63,6 @@ void UI_showMenu(SemaphoreHandle_t xMutex) {
     static uint8_t rxData[24];
 
     if (IsUSBConected()) {
-    //if (true) {
         switch (menuState) {
             case( UI_MENU_STATE_INIT):
                 if (USBSend((uint8_t*) textoBienvenida)) {
@@ -71,6 +70,7 @@ void UI_showMenu(SemaphoreHandle_t xMutex) {
                 }
                 xSemaphoreTake(xMutex, portMAX_DELAY);
                 //xQueueReceive(cola, &rxData, portMAX_DELAY);
+
                 //if (UI_waitForInput(rxData)) {
                     menuState = UI_MENU_STATE_OPTIONS;
                 //}
