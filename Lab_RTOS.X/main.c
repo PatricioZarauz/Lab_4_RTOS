@@ -49,22 +49,41 @@
 /* Kernel includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "freeRTOS/include/semphr.h"
+//#include "freeRTOS/include/queue.h"
+
 
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 
-void blinkLED( void *p_param );
+void blinkLED(void *p_param);
+void time(void *p_param);
+void usbService(void *p_param);
+void userInterface(void *p_param);
 
 /*
                          Main application
  */
-int main(void)
-{
+
+static SemaphoreHandle_t xMutex = 0;
+//static QueueHandle_t cola;
+
+int main(void) {
     // initialize the device
     SYSTEM_Initialize( );
 
     /* Create the tasks defined within this file. */
-    xTaskCreate( blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY+1, NULL );
+
+    xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    
+
+    xMutex = xSemaphoreCreateMutex();
+    //cola = xQueueCreate(10, 1024);
+    if (xMutex != NULL) {
+        xTaskCreate(usbService, "usbService", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        //xTaskCreate(userInterface, "userInterface", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        //Crear userInterface dentro de usbService
+        //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
 
     /* Finally start the scheduler. */
     vTaskStartScheduler( );
@@ -75,10 +94,25 @@ int main(void)
     to be created.  See the memory management section on the FreeRTOS web site
     for more details. */
     for(;;);
+    }
 }
 
-void blinkLED( void *p_param ){
-    // Add your code here
+void blinkLED(void *p_param) {
+    for (;;) {
+        LEDA_SetHigh();
+        vTaskDelay(pdMS_TO_TICKS(400));
+        LEDA_SetLow();
+        vTaskDelay(pdMS_TO_TICKS(800));
+    }
+    vTaskDelete(NULL);
+}
+
+void usbService(void *p_param) {
+    xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    for (;;) {
+            USBStatusUpdater();
+        } 
+    vTaskDelete(NULL);
 }
 
 void vApplicationMallocFailedHook( void ){
