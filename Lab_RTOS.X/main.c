@@ -50,10 +50,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "freeRTOS/include/semphr.h"
+#include "freeRTOS/include/queue.h"
 
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 #include "utils/USB.h"
+#include "system/UI.h"
+
 
 void blinkLED(void *p_param);
 void time(void *p_param);
@@ -61,23 +64,30 @@ void time(void *p_param);
 /*
                          Main application
  */
+
+static SemaphoreHandle_t xMutex;
+static QueueHandle_t cola;
+
 int main(void) {
     // initialize the device
     SYSTEM_Initialize();
 
     /* Create the tasks defined within this file. */
     xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    SemaphoreHandle_t xMutex;
+    
 
     xMutex = xSemaphoreCreateMutex();
+    cola = xQueueCreate(10, 1024);
     if (xMutex != NULL) {
-        xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-        
+        xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        //Crear userInterface dentro de usbService
+        //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
+
+
     }
-    
+
     //Create a task to initialize usb
-    
+
 
     //xSemaphoreTake();
     /* Finally start the scheduler. */
@@ -103,20 +113,23 @@ void blinkLED(void *p_param) {
 }
 
 void usbService(void *p_param) {
-    for (;;) {
-       USBStatusUpdater();
-    }
+    xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
     
+    for (;;) {
+        USBStatusUpdater();
+    }
+
     vTaskDelete(NULL);
 }
 
 void userInterface(void *p_param) {
     for (;;) {
+        UI_showMenu(xMutex);
         xSemaphoreTake(xMutex, portMAX_DELAY);
         //userInterface
         xSemaphoreGive(xMutex);
     }
-    
+
     vTaskDelete(NULL);
 }
 

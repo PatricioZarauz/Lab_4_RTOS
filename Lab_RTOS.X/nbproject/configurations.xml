@@ -47,6 +47,7 @@
       </logicalFolder>
       <logicalFolder name="system" displayName="system" projectFiles="true">
         <itemPath>system/register.h</itemPath>
+        <itemPath>system/UI.h</itemPath>
       </logicalFolder>
       <logicalFolder name="utils" displayName="utils" projectFiles="true">
         <itemPath>utils/USB.h</itemPath>
@@ -97,6 +98,7 @@
       </logicalFolder>
       <logicalFolder name="system" displayName="system" projectFiles="true">
         <itemPath>system/register.c</itemPath>
+        <itemPath>system/UI.c</itemPath>
       </logicalFolder>
       <logicalFolder name="utils" displayName="utils" projectFiles="true">
         <itemPath>utils/USB.c</itemPath>
