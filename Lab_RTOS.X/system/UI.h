@@ -28,15 +28,15 @@ typedef enum {
 
 
 
-void UI_showMenu(SemaphoreHandle_t xMutex);
+void UI_showMenu(SemaphoreHandle_t xMutex, uint8_t *rxData);
 
 bool UI_waitForInput(uint8_t *dest);
 
 bool UI_checkValidOption(uint8_t *src, uint32_t min, uint32_t max);
 
-bool UI_setTimedate(uint8_t *src);
+bool UI_setTimedate(SemaphoreHandle_t xMutex, uint8_t *src);
 
-bool UI_setRGBLED(uint8_t *src);
+bool UI_setRGBLED(SemaphoreHandle_t xMutex, uint8_t *src);
 
 #endif /* _UI_H */
 

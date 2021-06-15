@@ -14,11 +14,11 @@
   @Description:
     This header file provides APIs for driver for RTCC.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.167.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.169.0
         Device            :  PIC32MM0256GPM064
     The generated drivers are tested against the following:
         Compiler          :  XC32 v2.40
-        MPLAB 	          :  MPLAB X v5.35
+        MPLAB 	          :  MPLAB X v5.40
 */
 
 /*
@@ -74,9 +74,9 @@ void RTCC_Initialize(void)
      
    if(!RTCCTimeInitialized())
    {
-       // set 2020-05-12 15-08-29
-       RTCDATE = 0x20051202; // Year/Month/Date/Wday
-       RTCTIME = 0x15082900; //  hours/minutes/seconds
+       // set 2021-05-21 18-26-07
+       RTCDATE = 0x21052105; // Year/Month/Date/Wday
+       RTCTIME = 0x18260700; //  hours/minutes/seconds
        
    }
        // ON enabled; OUTSEL Alarm Event; WRLOCK disabled; AMASK Every Half Second; ALMRPT 0; RTCOE disabled; CHIME disabled; ALRMEN disabled; 

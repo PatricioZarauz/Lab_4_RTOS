@@ -50,8 +50,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "freeRTOS/include/semphr.h"
-//#include "freeRTOS/include/queue.h"
-
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 #include "utils/USB.h"
@@ -62,11 +60,12 @@ void blinkLED(void *p_param);
 void time(void *p_param);
 void usbService(void *p_param);
 void userInterface(void *p_param);
+void getData (void *p_param);
 
 /*
                          Main application
  */
-
+static uint8_t rxData[24];
 static SemaphoreHandle_t xMutex = 0;
 //static QueueHandle_t cola;
 
@@ -78,15 +77,12 @@ int main(void) {
     xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
     xMutex = xSemaphoreCreateMutex();
     //cola = xQueueCreate(10, 1024);
-    if (xMutex != NULL) {
-        xTaskCreate(usbService, "usbService", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-        //xTaskCreate(userInterface, "userInterface", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-        //Crear userInterface dentro de usbService
-        //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
+
 
     //cola = xQueueCreate(10, 1024);
     if (xMutex != NULL) {
         xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        xTaskCreate(getData, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
         //Crear userInterface dentro de usbService
         //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
 
@@ -104,9 +100,9 @@ int main(void) {
     insufficient FreeRTOS heap memory available for the idle and/or timer tasks
     to be created.  See the memory management section on the FreeRTOS web site
     for more details. */
-    for(;;);
-    }
+    for (;;);
 }
+
 
 void blinkLED(void *p_param) {
     for (;;) {
@@ -118,17 +114,27 @@ void blinkLED(void *p_param) {
     vTaskDelete(NULL);
 }
 
+void getData(void *p_param) {
+    for (;;) {
+        if (UI_waitForInput(rxData)) {
+            xSemaphoreGive(xMutex);
+
+        }
+        vTaskDelete(NULL);
+    }
+}
+
 void usbService(void *p_param) {
     xTaskCreate(userInterface, "usbService", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
     for (;;) {
-            USBStatusUpdater();
-        } 
+        USBStatusUpdater();
+    }
     vTaskDelete(NULL);
 }
 
 void userInterface(void *p_param) {
     for (;;) {
-        UI_showMenu(xMutex);
+        UI_showMenu(xMutex, rxData);
         xSemaphoreTake(xMutex, portMAX_DELAY);
         //userInterface
         xSemaphoreGive(xMutex);

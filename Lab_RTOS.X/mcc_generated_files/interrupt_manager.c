@@ -14,11 +14,11 @@
   @Description:
     This source file provides implementations for PIC24 / dsPIC33 / PIC32MM MCUs interrupts.
     Generation Information : 
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.167.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.169.0
         Device            :  PIC32MM0256GPM064
     The generated drivers are tested against the following:
         Compiler          :  XC32 v2.40
-        MPLAB             :  MPLAB X v5.35
+        MPLAB             :  MPLAB X v5.40
 */
 /*
     (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
@@ -60,4 +60,19 @@ void INTERRUPT_Initialize (void)
         IPC7bits.USBIP = 1;
     //    Sub Priority: 0
         IPC7bits.USBIS = 0;
+    //    CNAI: PORT A Change Notification
+    //    Priority: 2
+        IPC2bits.CNAIP = 2;
+    //    Sub Priority: 0
+        IPC2bits.CNAIS = 0;
+    //    CNBI: PORT B Change Notification
+    //    Priority: 2
+        IPC2bits.CNBIP = 2;
+    //    Sub Priority: 0
+        IPC2bits.CNBIS = 0;
+    //    TI: Timer 2
+    //    Priority: 1
+        IPC4bits.T2IP = 1;
+    //    Sub Priority: 0
+        IPC4bits.T2IS = 0;
 }
