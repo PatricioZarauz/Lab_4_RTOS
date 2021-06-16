@@ -50,8 +50,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "freeRTOS/include/semphr.h"
-#include "freeRTOS/include/queue.h"
-
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
 #include "utils/USB.h"
@@ -60,13 +58,14 @@
 
 void blinkLED(void *p_param);
 void time(void *p_param);
+void userInterface(void *p_param);
+void getData(void *p_param);
 
 /*
                          Main application
  */
-
-static SemaphoreHandle_t xMutex;
-static QueueHandle_t cola;
+uint8_t rxData[24];
+SemaphoreHandle_t xMutex;
 
 int main(void) {
     // initialize the device
@@ -74,15 +73,14 @@ int main(void) {
 
     /* Create the tasks defined within this file. */
     xTaskCreate(blinkLED, "task1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    
 
     xMutex = xSemaphoreCreateMutex();
-    cola = xQueueCreate(10, 1024);
+
     if (xMutex != NULL) {
-        xTaskCreate(usbService, "task2", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+        xTaskCreate(getData, "task2", configMINIMAL_STACK_SIZE, rxData, tskIDLE_PRIORITY + 2, NULL);
+        xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
         //Crear userInterface dentro de usbService
         //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
-
 
     }
 
@@ -99,7 +97,6 @@ int main(void) {
     to be created.  See the memory management section on the FreeRTOS web site
     for more details. */
     for (;;);
-
 }
 
 void blinkLED(void *p_param) {
@@ -112,24 +109,26 @@ void blinkLED(void *p_param) {
     vTaskDelete(NULL);
 }
 
-void usbService(void *p_param) {
-    xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-    
+void getData(void *p_param) {
     for (;;) {
         USBStatusUpdater();
+        if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+            uint8_t bytesReceived;
+            bytesReceived = USBReceive(rxData);
+            if (bytesReceived > 0) {
+                rxData[bytesReceived] = '\0'; // End of String
+            }
+            xSemaphoreGive(xMutex);
+        }
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
-
     vTaskDelete(NULL);
 }
 
 void userInterface(void *p_param) {
     for (;;) {
-        UI_showMenu(xMutex);
-        xSemaphoreTake(xMutex, portMAX_DELAY);
-        //userInterface
-        xSemaphoreGive(xMutex);
+        UI_showMenu();
     }
-
     vTaskDelete(NULL);
 }
 

@@ -1,7 +1,6 @@
 #ifndef _UI_H    /* Guard against multiple inclusion */
 #define _UI_H
 
-#include "../freeRTOS/include/semphr.h"
 
 typedef enum {
     UI_MENU_STATE_INIT,
@@ -28,7 +27,7 @@ typedef enum {
 
 
 
-void UI_showMenu(SemaphoreHandle_t xMutex);
+void UI_showMenu();
 
 bool UI_waitForInput(uint8_t *dest);
 
