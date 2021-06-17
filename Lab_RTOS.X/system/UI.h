@@ -8,6 +8,7 @@ typedef enum {
     UI_MENU_STATE_SET_TIMEDATE,
     UI_MENU_STATE_SET_RGBLED,
     UI_MENU_STATE_GET_LAST_UPDATE,
+    EJEMPLO,
 } ui_menu_states_t;
 
 typedef enum {

@@ -52,8 +52,15 @@
 #include "freeRTOS/include/semphr.h"
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/pin_manager.h"
+#include "mcc_generated_files/usb/usb_device.h"
+#include "mcc_generated_files/usb/usb.h"
 #include "utils/USB.h"
 #include "system/UI.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
 
 
 void blinkLED(void *p_param);
@@ -61,6 +68,18 @@ void time(void *p_param);
 void userInterface(void *p_param);
 void getData(void *p_param);
 
+const uint8_t textoBienvenida[] = "Laboratorio 3 - Equipo 10\n\t- Patricio Zarauz\n\t- Gastón Salustio\n\t- Sebastián Reynosa";
+const uint8_t textoOpciones[] = "Seleccione una opcion:\n\n\t1. Fijar Fecha y Hora\n\t2. Encender o apagar LED especifico\n\t3. Consultar modificacion del ultimo LED:\n";
+/*const uint8_t textoSegundo[] = "Segundo:\n";
+const uint8_t textoMinuto[] = "Minuto:\n";
+const uint8_t textoHora[] = "Hora:\n";
+const uint8_t textoDia[] = "Dia:\n";
+const uint8_t textoMes[] = "Mes:\n";
+const uint8_t textoAno[] = "Año:\n";
+const uint8_t textoLed[] = "LED: (1-8)\n";
+const uint8_t textoColor[] = "Color: (0-4)\n";
+const uint8_t textoNoValido[] = "La opcion no es correcta, ingrese nuevamente \n";
+*/
 /*
                          Main application
  */
@@ -76,13 +95,13 @@ int main(void) {
 
     xMutex = xSemaphoreCreateMutex();
 
-    if (xMutex != NULL) {
-        xTaskCreate(getData, "task2", configMINIMAL_STACK_SIZE, rxData, tskIDLE_PRIORITY + 2, NULL);
-        xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
-        //Crear userInterface dentro de usbService
-        //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
+    //if (xMutex != NULL) {
+    xTaskCreate(getData, "task2", configMINIMAL_STACK_SIZE, rxData, tskIDLE_PRIORITY + 2, NULL);
+    xTaskCreate(userInterface, "task3", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    //Crear userInterface dentro de usbService
+    //Se necesita un solo semaforo para chequear el envio o recibo de info(texto)
 
-    }
+    //}
 
     //Create a task to initialize usb
 
@@ -111,14 +130,17 @@ void blinkLED(void *p_param) {
 
 void getData(void *p_param) {
     for (;;) {
-        USBStatusUpdater();
-        if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-            uint8_t bytesReceived;
-            bytesReceived = USBReceive(rxData);
-            if (bytesReceived > 0) {
-                rxData[bytesReceived] = '\0'; // End of String
+        //USBStatusUpdater();
+        if ((USBGetDeviceState() >= CONFIGURED_STATE) && !USBIsDeviceSuspended()) {
+            CDCTxService();
+            if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                uint8_t bytesReceived;
+                bytesReceived = USBReceive(rxData);
+                if (bytesReceived > 0) {
+                    rxData[bytesReceived] = '\0'; // End of String
+                }
+                xSemaphoreGive(xMutex);
             }
-            xSemaphoreGive(xMutex);
         }
         vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -127,7 +149,66 @@ void getData(void *p_param) {
 
 void userInterface(void *p_param) {
     for (;;) {
-        UI_showMenu();
+        //UI_showMenu();
+        static ui_menu_states_t menuState = UI_MENU_STATE_INIT;
+
+
+        //if (IsUSBConected()) {
+        switch (menuState) {
+            case( UI_MENU_STATE_INIT):
+
+                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                    //if ((UI_checkValidOption(rxData, 1, 2))) {
+                        if (USBSend((uint8_t*) textoBienvenida)) {
+                            //menuState = UI_MENU_STATE_OPTIONS;
+                            memset(rxData, 0, sizeof (rxData));
+                        }
+                    //}
+                    menuState = EJEMPLO;
+                    xSemaphoreGive(xMutex);
+                }
+                break;
+            case( UI_MENU_STATE_OPTIONS):
+                if (USBSend((uint8_t*) textoOpciones)) {
+                    memset(rxData, 0, sizeof (rxData));
+                }
+                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                    if ((UI_checkValidOption(rxData, 1, 3))) {
+                        menuState = UI_MENU_STATE_OPTIONS + atoi(rxData);
+                    } else {
+                        //USBSend((uint8_t*) textoNoValido);
+                        menuState = UI_MENU_STATE_OPTIONS;
+                    }
+                    xSemaphoreGive(xMutex);
+                }
+                break;
+
+            case( UI_MENU_STATE_SET_TIMEDATE):
+                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                    if (UI_setTimedate(rxData)) {
+                        menuState = UI_MENU_STATE_OPTIONS;
+                    }
+                    xSemaphoreGive(xMutex);
+                }
+                break;
+            case( UI_MENU_STATE_SET_RGBLED):
+                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                    if (UI_setRGBLED(rxData)) {
+                        menuState = UI_MENU_STATE_OPTIONS;
+                    }
+                    xSemaphoreGive(xMutex);
+                }
+                break;
+            case( UI_MENU_STATE_GET_LAST_UPDATE):;
+                /*uint8_t *res = getLatestUpdateTime();
+                if (USBSend(res)) {
+                    memset(rxData, 0, sizeof (rxData));
+                }*/
+                menuState = UI_MENU_STATE_OPTIONS;
+                break;
+            default:
+                break;
+        }
     }
     vTaskDelete(NULL);
 }

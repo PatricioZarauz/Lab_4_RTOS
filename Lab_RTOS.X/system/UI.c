@@ -43,9 +43,9 @@
 
 extern SemaphoreHandle_t xMutex;
 extern uint8_t rxData[24];
-
+/*
 const uint8_t textoBienvenida[] = "Laboratorio 3 - Equipo 10\n\t- Patricio Zarauz\n\t- Gastón Salustio\n\t- Sebastián Reynosa";
-const uint8_t textoOpciones[] = "Seleccione una opcion:\n\n\t1. Fijar Fecha y Hora\n\t2. Encender o apagar LED especifico\n\t3. Consultar modificacion del ultimo LED:\n";
+const uint8_t textoOpciones[] = "Seleccione una opcion:\n\n\t1. Fijar Fecha y Hora\n\t2. Encender o apagar LED especifico\n\t3. Consultar modificacion del ultimo LED:\n";*/
 const uint8_t textoSegundo[] = "Segundo:\n";
 const uint8_t textoMinuto[] = "Minuto:\n";
 const uint8_t textoHora[] = "Hora:\n";
@@ -59,63 +59,72 @@ const uint8_t textoNoValido[] = "La opcion no es correcta, ingrese nuevamente \n
 static bool isValidYear(int yr) {
     return (yr >= 1900);
 }
-
+/*
 void UI_showMenu() {
     static ui_menu_states_t menuState = UI_MENU_STATE_INIT;
 
 
-    if (IsUSBConected()) {
-        switch (menuState) {
-            case( UI_MENU_STATE_INIT):
-                USBSend((uint8_t*) textoBienvenida);
-                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-                    menuState = UI_MENU_STATE_OPTIONS;
-                    xSemaphoreGive(xMutex);
-                }
-                break;
-            case( UI_MENU_STATE_OPTIONS):
-                if (USBSend((uint8_t*) textoOpciones)) {
-                    memset(rxData, 0, sizeof (rxData));
-                }
-                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-                    if ((UI_checkValidOption(rxData, 1, 3))) {
-                        menuState = UI_MENU_STATE_OPTIONS + atoi(rxData);
-                    } else {
-                        USBSend((uint8_t*) textoNoValido);
-                        menuState = UI_MENU_STATE_OPTIONS;
-                    }
-                    xSemaphoreGive(xMutex);
-                }
-                break;
+    //if (IsUSBConected()) {
+    switch (menuState) {
+        case( UI_MENU_STATE_INIT):
 
-            case( UI_MENU_STATE_SET_TIMEDATE):
-                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-                    if (UI_setTimedate(rxData)) {
-                        menuState = UI_MENU_STATE_OPTIONS;
+            if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                if ((UI_checkValidOption(rxData, 0, 0))) {
+                    if (USBSend((uint8_t*) textoBienvenida)) {
+                        //menuState = UI_MENU_STATE_OPTIONS;
+                        memset(rxData, 0, sizeof (rxData));
                     }
-                    xSemaphoreGive(xMutex);
                 }
-                break;
-            case( UI_MENU_STATE_SET_RGBLED):
-                if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-                    if (UI_setRGBLED(rxData)) {
-                        menuState = UI_MENU_STATE_OPTIONS;
-                    }
-                    xSemaphoreGive(xMutex);
+                menuState = EJEMPLO;
+                xSemaphoreGive(xMutex);
+            }
+            break;
+        case( UI_MENU_STATE_OPTIONS):
+            if (USBSend((uint8_t*) textoOpciones)) {
+                memset(rxData, 0, sizeof (rxData));
+            }
+            if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                if ((UI_checkValidOption(rxData, 1, 3))) {
+                    menuState = UI_MENU_STATE_OPTIONS + atoi(rxData);
+                } else {
+                    USBSend((uint8_t*) textoNoValido);
+                    menuState = UI_MENU_STATE_OPTIONS;
                 }
-                break;
-            case( UI_MENU_STATE_GET_LAST_UPDATE):;
-                uint8_t *res = getLatestUpdateTime();
-                if (USBSend(res)) {
-                    memset(rxData, 0, sizeof (rxData));
+                xSemaphoreGive(xMutex);
+            }
+            break;
+
+        case( UI_MENU_STATE_SET_TIMEDATE):
+            if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                if (UI_setTimedate(rxData)) {
+                    menuState = UI_MENU_STATE_OPTIONS;
                 }
-                menuState = UI_MENU_STATE_OPTIONS;
-                break;
-        }
+                xSemaphoreGive(xMutex);
+            }
+            break;
+        case( UI_MENU_STATE_SET_RGBLED):
+            if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+                if (UI_setRGBLED(rxData)) {
+                    menuState = UI_MENU_STATE_OPTIONS;
+                }
+                xSemaphoreGive(xMutex);
+            }
+            break;
+        case( UI_MENU_STATE_GET_LAST_UPDATE):;
+            uint8_t *res = getLatestUpdateTime();
+            if (USBSend(res)) {
+                memset(rxData, 0, sizeof (rxData));
+            }
+            menuState = UI_MENU_STATE_OPTIONS;
+            break;
+        default:
+            break;
+    }
     } else {
         menuState = UI_MENU_STATE_INIT;
     }
 }
+*/
 
 /*
 bool UI_waitForInput(uint8_t *dest) {
