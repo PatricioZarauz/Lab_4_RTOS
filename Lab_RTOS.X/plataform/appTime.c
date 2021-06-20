@@ -5,7 +5,7 @@
 static struct tm timeDate;
 static time_t timeStamp;
 
-void updateTime(void) {
+void updateTime1(void) {
     vTaskDelay(pdMS_TO_TICKS(1000));
     if (RTCC_TimeGet(&timeDate)) {
         timeStamp = mktime(&timeDate);

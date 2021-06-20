@@ -34,7 +34,7 @@ bool UI_waitForInput(uint8_t *dest);
 
 bool UI_checkValidOption(uint8_t *src, uint32_t min, uint32_t max);
 
-bool UI_setTimedate(uint8_t *src);
+bool UI_setTimedate();
 
 bool UI_setRGBLED(uint8_t *src);
 

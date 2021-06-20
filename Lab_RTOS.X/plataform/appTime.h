@@ -5,7 +5,7 @@
 #include <time.h>
 
 
-void updateTime(void);
+void updateTime1(void);
 
 time_t getTimestamp(void);
 
