@@ -42,7 +42,6 @@
         <logicalFolder name="LEDs_RGB" displayName="LEDs_RGB" projectFiles="true">
           <itemPath>plataform/LEDs_RGB/WS2812.h</itemPath>
         </logicalFolder>
-        <itemPath>plataform/appTime.h</itemPath>
         <itemPath>plataform/LED_RGB.h</itemPath>
       </logicalFolder>
       <logicalFolder name="system" displayName="system" projectFiles="true">
@@ -51,6 +50,7 @@
       </logicalFolder>
       <logicalFolder name="utils" displayName="utils" projectFiles="true">
         <itemPath>utils/USB.h</itemPath>
+        <itemPath>utils/text.h</itemPath>
       </logicalFolder>
       <itemPath>FreeRTOSConfig.h</itemPath>
     </logicalFolder>
@@ -93,7 +93,6 @@
         <logicalFolder name="LEDs_RGB" displayName="LEDs_RGB" projectFiles="true">
           <itemPath>plataform/LEDs_RGB/WS2812.c</itemPath>
         </logicalFolder>
-        <itemPath>plataform/appTime.c</itemPath>
         <itemPath>plataform/LED_RGB.c</itemPath>
       </logicalFolder>
       <logicalFolder name="system" displayName="system" projectFiles="true">

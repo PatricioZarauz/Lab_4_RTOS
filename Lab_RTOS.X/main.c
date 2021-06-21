@@ -57,6 +57,7 @@
 #include "utils/USB.h"
 #include "system/UI.h"
 #include "plataform/LED_RGB.h"
+#include "utils/text.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -70,27 +71,6 @@ void blinkLED(void *p_param);
 void updateTime(void *p_param);
 void userInterface(void *p_param);
 void manageUSB(void *p_param);
-
-const uint8_t textoBienvenida[] = "Laboratorio 4 - Equipo 10\n\t- Patricio Zarauz\n\t- Gastón Salustio\n\t- Sebastián Reynosa\n";
-const uint8_t textoOpciones[] = "Seleccione una opcion:\n\n\t1. Fijar Fecha y Hora\n\t2. Encender o apagar LED especifico\n\t3. Consultar modificacion del ultimo LED:\n";
-const uint8_t textoSegundo[] = "Segundo:\n";
-const uint8_t textoMinuto[] = "Minuto:\n";
-const uint8_t textoHora[] = "Hora:\n";
-const uint8_t textoDia[] = "Dia:\n";
-const uint8_t textoMes[] = "Mes:\n";
-const uint8_t textoAno[] = "Año:\n";
-const uint8_t textoLed[] = "LED: (1-8)\n";
-const uint8_t textoColor[] = "Color: (0-4)\n";
-const uint8_t textoNoValido[] = "La opcion no es correcta, ingrese nuevamente \n";
-const uint8_t textoVacio[] = "\n";
-
-typedef struct {
-    uint8_t led;
-    uint8_t color;
-    uint32_t time;
-} app_registro_t;
-
-app_registro_t miRegistro;
 
 /*
                          Main application
@@ -173,189 +153,6 @@ void manageUSB(void *p_param) {
     vTaskDelete(NULL);
 }
 
-static bool isValidYear(int yr) {
-    return (yr >= 1900);
-}
-
-void setLatestLED(uint8_t latestLed) {
-    miRegistro.led = latestLed;
-}
-
-void setLatestColor(uint8_t latestColor) {
-    miRegistro.color = latestColor;
-}
-
-void setRGBLEDAndTime(void) {
-    RGB_setLedColor(miRegistro.led, miRegistro.color);
-    RGB_showLeds(AMOUNT_RGB_LED);
-    xSemaphoreTake(xTimer, portMAX_DELAY);
-    miRegistro.time = timeStamp;
-}
-
-void getLatestUpdateTime(uint8_t* latestUpdateTime) {
-    xSemaphoreTake(xTimer, portMAX_DELAY);
-
-    time_t raw_time = (time_t) miRegistro.time;
-    struct tm *timeinfo = localtime(&raw_time);
-
-    sprintf(latestUpdateTime, "%s\n", asctime(timeinfo));
-}
-
-bool setTimedate() {
-    static ui_date_states_t dateState = UI_DATE_STATE_SEC;
-    static struct tm date;
-
-    switch (dateState) {
-        case UI_DATE_STATE_SEC:
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoSegundo);
-
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 0, 59)) {
-                date.tm_sec = atoi(rxData);
-                dateState = UI_DATE_STATE_MIN;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_SEC;
-            }
-            break;
-
-        case UI_DATE_STATE_MIN:
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoMinuto);
-
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 0, 59)) {
-                date.tm_min = atoi(rxData);
-                dateState = UI_DATE_STATE_HR;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_MIN;
-            }
-
-            break;
-        case UI_DATE_STATE_HR:
-
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoHora);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 0, 23)) {
-                date.tm_hour = atoi(rxData);
-                dateState = UI_DATE_STATE_DAY;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_HR;
-            }
-
-            break;
-        case UI_DATE_STATE_DAY:
-
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoDia);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 1, 31)) {
-                date.tm_mday = atoi(rxData);
-                dateState = UI_DATE_STATE_MON;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_DAY;
-            }
-
-            break;
-        case UI_DATE_STATE_MON:
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoMes);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 1, 12)) {
-                date.tm_mon = atoi(rxData) - 1;
-                dateState = UI_DATE_STATE_YR;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_MON;
-            }
-            
-            break;
-        case UI_DATE_STATE_YR:
-
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoAno);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (isValidYear(atoi(rxData))) {
-                date.tm_year = atoi(rxData) - 1900;
-                dateState = UI_DATE_STATE_SEC;
-                xSemaphoreTake(xTimer, portMAX_DELAY);
-                RTCC_TimeSet(&date);
-                return true;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                dateState = UI_DATE_STATE_YR;
-            }
-            
-            break;
-    }
-    return false;
-}
-
-bool setRGBLED() {
-    static ui_rgb_led_states_t rgbLedState = UI_RGB_LED_STATE_LED;
-
-    switch (rgbLedState) {
-        case UI_RGB_LED_STATE_LED:
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoLed);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 1, 8)) {
-                setLatestLED(atoi(rxData) - 1);
-                rgbLedState = UI_RGB_LED_STATE_COLOR;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                rgbLedState = UI_RGB_LED_STATE_LED;
-            }
-
-            break;
-        case UI_RGB_LED_STATE_COLOR:
-            xSemaphoreTake(sendData, portMAX_DELAY);
-            putsUSBUSART((uint8_t*) textoColor);
-            memset(rxData, 0, sizeof (rxData));
-
-            xSemaphoreTake(readData, portMAX_DELAY);
-            if (UI_checkValidOption(rxData, 0, 4)) {
-                setLatestColor(atoi(rxData));
-                setRGBLEDAndTime();
-                rgbLedState = UI_RGB_LED_STATE_LED;
-                return true;
-            } else {
-                xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) textoNoValido);
-                rgbLedState = UI_RGB_LED_STATE_COLOR;
-            }
-
-            break;
-    }
-    return false;
-}
-
 void userInterface(void *p_param) {
     static ui_menu_states_t menuState = UI_MENU_STATE_INIT;
     for (;;) {
@@ -368,6 +165,7 @@ void userInterface(void *p_param) {
                 xSemaphoreTake(sendData, portMAX_DELAY);
                 putsUSBUSART((uint8_t*) textoVacio);
 
+                //Espero que el usuario presione una tecla
                 xSemaphoreTake(readData, portMAX_DELAY);
                 memset(rxData, 0, sizeof (rxData));
                 xSemaphoreTake(sendData, portMAX_DELAY);
@@ -395,22 +193,21 @@ void userInterface(void *p_param) {
                 break;
 
             case( UI_MENU_STATE_SET_TIMEDATE):
-                if (setTimedate()) {
+                if (UI_setTimedate()) {
                     menuState = UI_MENU_STATE_OPTIONS;
                 }
                 break;
             case( UI_MENU_STATE_SET_RGBLED):
-                if (setRGBLED()) {
+                if (UI_setRGBLED()) {
                     menuState = UI_MENU_STATE_OPTIONS;
                 }
                 break;
             case( UI_MENU_STATE_GET_LAST_UPDATE):;
 
-                uint8_t aux[64];
-                getLatestUpdateTime(&aux);
-                //uint8_t *res = getLatestUpdateTime();
+                uint8_t latestTime[64];
+                getLatestUpdateTime(&latestTime);
                 xSemaphoreTake(sendData, portMAX_DELAY);
-                putsUSBUSART((uint8_t*) aux);
+                putsUSBUSART((uint8_t*) latestTime);
                 memset(rxData, 0, sizeof (rxData));
 
                 menuState = UI_MENU_STATE_OPTIONS;

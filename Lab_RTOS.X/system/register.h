@@ -10,13 +10,13 @@ typedef struct {
     uint32_t time;
 } app_register_t;
 
-void setLatestLED1(uint8_t latestLed);
+void setLatestLED(uint8_t latestLed);
 
-void setLatestColor1(uint8_t latestColor);
+void setLatestColor(uint8_t latestColor);
 
-void setRGBLEDAndTime1(void);
+void setRGBLEDAndTime(void);
 
-uint8_t* getLatestUpdateTime1(void);
+void getLatestUpdateTime(uint8_t* latestUpdateTime);
 
 #endif /* __REGISTER_H */
 

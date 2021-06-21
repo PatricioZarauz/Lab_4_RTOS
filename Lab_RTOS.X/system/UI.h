@@ -28,15 +28,13 @@ typedef enum {
 
 
 
-void UI_showMenu();
-
-bool UI_waitForInput(uint8_t *dest);
+void UI_showMenu(void *p_param);
 
 bool UI_checkValidOption(uint8_t *src, uint32_t min, uint32_t max);
 
-bool UI_setTimedate();
+bool UI_setTimedate(void);
 
-bool UI_setRGBLED(uint8_t *src);
+bool UI_setRGBLED(void);
 
 #endif /* _UI_H */
 
